@@ -9,7 +9,7 @@
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -514,11 +514,7 @@ body.pushed .tabs{display:none}
       return;
     }
     if (d.sit) { ui.filter = d.sit; ui.q = ''; $('q').value = ''; syncSearch(); location.hash = '#/library'; return; }
-    if (d.back !== undefined) {
-      if ($('v-setup').classList.contains('on')) { history.length > 1 ? history.back() : (location.hash = '#/recipe/' + encodeURIComponent(ui.setup.id)); }
-      else location.hash = ui.lastList;
-      return;
-    }
+    if (d.back !== undefined) { goBack(); return; }
     if (d.pick) { pickSlot(d.pick); return; }
     if (d.slot) { closeSheet(); ui.setup = null; location.hash = '#/setup/' + d.slot + '/' + encodeURIComponent(d.rid); return; }
     if (d.remove) {
@@ -543,13 +539,17 @@ body.pushed .tabs{display:none}
     if (t.id === 'clearQ') { e.preventDefault(); $('q').value = ''; ui.q = ''; syncSearch(); renderList(); $('q').focus(); return; }
     if (t.id === 'cancelQ') { $('q').value = ''; ui.q = ''; $('q').blur(); syncSearch(); renderList(); return; }
   });
+  function goBack() {
+    if ($('v-setup').classList.contains('on')) { ui.slide = 'inL'; location.hash = '#/recipe/' + encodeURIComponent(ui.setup.id); }
+    else { ui.slide = 'inL'; location.hash = ui.lastList; }
+  }
   $('toast').addEventListener('click', function () { this.classList.remove('show'); });
 
   // swipe between My camera and Library
   var sx = 0, sy = 0, swiping = false, lock = null;
   function inScroller(el) { return el.closest && (el.closest('.chips') || el.closest('input')); }
   document.addEventListener('touchstart', function (e) {
-    if (e.touches.length !== 1 || document.body.classList.contains('pushed') || $('scrim').classList.contains('on') || inScroller(e.target)) { swiping = false; return; }
+    if (e.touches.length !== 1 || $('scrim').classList.contains('on') || inScroller(e.target)) { swiping = false; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY; swiping = true; lock = null;
   }, { passive: true });
   document.addEventListener('touchmove', function (e) {
@@ -563,6 +563,10 @@ body.pushed .tabs{display:none}
     swiping = false;
     var dx = e.changedTouches[0].clientX - sx;
     if (Math.abs(dx) < 60) return;
+    if (document.body.classList.contains('pushed')) {
+      if (dx > 0) goBack();
+      return;
+    }
     var onHome = $('v-home').classList.contains('on');
     if (dx < 0 && onHome) { ui.slide = 'inR'; location.hash = '#/library'; }
     else if (dx > 0 && !onHome) { ui.slide = 'inL'; location.hash = '#/'; }
