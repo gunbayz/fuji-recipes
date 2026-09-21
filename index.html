@@ -38,6 +38,7 @@
   }
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body{min-height:100dvh;overscroll-behavior-y:none}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
@@ -46,9 +47,11 @@ a{color:var(--orchid)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mono{font-family:var(--mono)}
 .overline{font:500 11px/1.2 var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:0}
-.view{display:none;max-width:560px;margin:0 auto;padding:calc(var(--top) + 48px) 20px calc(var(--bottom) + 110px)}
+.view{display:none;max-width:560px;margin:0 auto;padding:calc(var(--top) + 16px) 20px calc(var(--bottom) + 110px)}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;margin:0 0 8px}
+.head h1{margin:0}
 .view.on{display:block}
-h1.big{margin:6px 0 8px;font:600 36px/1.1 var(--serif)}
+h1.big{font:600 36px/1.1 var(--serif)}
 .intro{margin:0 0 16px;font-size:15px;line-height:1.45;color:var(--muted)}
 
 /* Home */
@@ -61,8 +64,9 @@ h1.big{margin:6px 0 8px;font:600 36px/1.1 var(--serif)}
 .slot.empty .name{color:var(--faint)}
 .slot .sim{font:400 12px/1.3 var(--mono);color:var(--muted)}
 .chev{flex-shrink:0;color:var(--icon)}
-.toast{display:flex;gap:10px;align-items:center;padding:12px 14px;margin:0 0 12px;border-radius:14px;background:var(--mint-tint);color:var(--mint);font-size:14px;line-height:1.4}
-.topbtn{position:absolute;right:12px;top:calc(var(--top) + 6px);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:22px;color:var(--muted)}
+.toast{position:fixed;z-index:30;left:12px;right:12px;top:calc(var(--top) + 10px);max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center;padding:14px 16px;border-radius:16px;background:#16251D;color:var(--mint);font-size:15px;line-height:1.4;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-140%);opacity:0;transition:transform .3s ease,opacity .3s ease;pointer-events:none}
+.toast.show{transform:none;opacity:1;pointer-events:auto}
+.topbtn{width:44px;height:44px;margin-right:-8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:22px;color:var(--muted)}
 
 /* Library */
 .search{display:flex;align-items:center;gap:12px;margin:4px 0 12px}
@@ -101,7 +105,6 @@ h1.big{margin:6px 0 8px;font:600 36px/1.1 var(--serif)}
 /* Detail */
 #v-recipe{padding-top:0}
 .hero{position:relative;height:300px;margin:0 -20px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--icon);overflow:hidden}
-.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(rgba(10,10,12,0),var(--bg));pointer-events:none}
 .floatbar{position:fixed;z-index:5;top:calc(var(--top) + 10px);left:0;right:0;max-width:560px;margin:0 auto;padding:0 12px;display:flex;justify-content:space-between;pointer-events:none}
 .floatbar button{pointer-events:auto;height:40px;display:flex;align-items:center;gap:2px;padding:0 14px 0 8px;border-radius:20px;background:rgba(10,10,12,.62);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font:500 15px var(--sans)}
 .floatbar .star{width:44px;height:44px;margin:0;padding:0;justify-content:center}
@@ -170,6 +173,9 @@ body.pushed .tabs{display:none}
 .opt.plain .t b{font-weight:500}
 .sheet .cancelrow{margin-top:8px;height:52px;border-radius:16px;background:var(--surface-2);font:600 16px var(--sans)}
 @keyframes fade{from{opacity:0}}
+@keyframes inL{from{transform:translateX(-24px);opacity:.3}}
+@keyframes inR{from{transform:translateX(24px);opacity:.3}}
+.view.inL{animation:inL .22s ease}.view.inR{animation:inR .22s ease}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -178,18 +184,18 @@ body.pushed .tabs{display:none}
 
 <main>
 <section id="v-home" class="view" aria-labelledby="h-home">
-  <button class="topbtn" id="menuBtn" aria-label="Backup and settings">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
-  </button>
-  <p class="overline">X-T5 · Firmware 4.31</p>
-  <h1 class="big" id="h-home">My camera</h1>
-  <p class="intro">What’s saved in C1–C7 right now. Tap a slot to see its recipe, or fill an empty one.</p>
-  <div id="toast" class="toast" role="status" hidden></div>
+  <div class="head">
+    <h1 class="big" id="h-home">My camera</h1>
+    <button class="topbtn" id="menuBtn" aria-label="Backup and settings">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
+    </button>
+  </div>
+  <p class="intro">Here’s what’s on your camera. When you add a new recipe, save it here too, so you’ll always know what’s in each slot.</p>
   <div class="slots" id="slots"></div>
 </section>
 
 <section id="v-library" class="view" aria-labelledby="h-lib">
-  <h1 class="big" id="h-lib">Library</h1>
+  <div class="head"><h1 class="big" id="h-lib">Library</h1></div>
   <div class="search" id="search" role="search">
     <label class="field" id="field">
       <span class="sr">Search recipes</span>
@@ -217,6 +223,7 @@ body.pushed .tabs{display:none}
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 4.5l3.8 1-3.6 14.5-3.8-1z"/></svg>Library</button>
 </nav>
 
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div class="scrim" id="scrim">
   <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
 </div>
@@ -292,9 +299,15 @@ body.pushed .tabs{display:none}
       }
     });
     $('slots').innerHTML = h;
+    if (ui.toast) { showToast(ui.toast); ui.toast = ''; }
+  }
+  var toastTimer = null;
+  function showToast(msg) {
     var t = $('toast');
-    if (ui.toast) { t.hidden = false; t.innerHTML = ICON_CHECK.replace('width="16" height="16"', 'width="18" height="18"') + '<span>' + esc(ui.toast) + '</span>'; }
-    else t.hidden = true;
+    t.innerHTML = ICON_CHECK.replace('width="16" height="16"', 'width="18" height="18"') + '<span>' + esc(msg) + '</span>';
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2800);
   }
 
   // ---------- library ----------
@@ -426,7 +439,7 @@ body.pushed .tabs{display:none}
   // ---------- backup menu ----------
   function openMenu() {
     var nf = Object.keys(state.favs).length, ns = Object.keys(state.slots).filter(function (k) { return state.slots[k]; }).length;
-    openSheet('<h2 id="sheetTitle">Backup</h2><p>Your favorites (' + nf + ') and slots (' + ns + ') are saved on this device only. Export a backup to move them to another device.</p>' +
+    openSheet('<h2 id="sheetTitle">Backup</h2><p class="overline" style="margin:0 4px 10px">X-T5 · Firmware 4.31</p><p>Your favorites (' + nf + ') and slots (' + ns + ') are saved on this device only. Export a backup to move them to another device.</p>' +
       '<button class="opt plain" data-export><span class="t"><b>Export backup</b><span>Save a small .json file</span></span></button>' +
       '<button class="opt plain" data-import><span class="t"><b>Import backup</b><span>Replace this device’s favorites and slots</span></span></button>' +
       '<button class="cancelrow" data-close>Close</button>');
@@ -459,7 +472,8 @@ body.pushed .tabs{display:none}
 
   // ---------- routing ----------
   function show(id) {
-    ['v-home', 'v-library', 'v-recipe', 'v-setup'].forEach(function (v) { $(v).classList.toggle('on', v === id); });
+    ['v-home', 'v-library', 'v-recipe', 'v-setup'].forEach(function (v) { $(v).classList.toggle('on', v === id); $(v).classList.remove('inL', 'inR'); });
+    if (ui.slide) { var el = $(id); void el.offsetWidth; el.classList.add(ui.slide); ui.slide = ''; }
     var pushed = id === 'v-recipe' || id === 'v-setup';
     document.body.classList.toggle('pushed', pushed);
     $('tab-home').setAttribute('aria-selected', id === 'v-home');
@@ -485,7 +499,7 @@ body.pushed .tabs{display:none}
     var t = e.target.closest('button, a');
     if (!t) { if (e.target === $('scrim')) closeSheet(); return; }
     var d = t.dataset;
-    if (d.go) { ui.toast = ''; location.hash = d.go; return; }
+    if (d.go) { ui.toast = ''; if (!document.body.classList.contains('pushed') && location.hash !== d.go && (location.hash || '#/') !== d.go) ui.slide = d.go === '#/library' ? 'inR' : 'inL'; location.hash = d.go; return; }
     if (d.empty) { ui.filter = d.empty; ui.q = ''; $('q').value = ''; syncSearch(); location.hash = '#/library'; return; }
     if (d.filter) { ui.filter = d.filter; renderLibrary(); return; }
     if (d.fav) {
@@ -529,6 +543,31 @@ body.pushed .tabs{display:none}
     if (t.id === 'clearQ') { e.preventDefault(); $('q').value = ''; ui.q = ''; syncSearch(); renderList(); $('q').focus(); return; }
     if (t.id === 'cancelQ') { $('q').value = ''; ui.q = ''; $('q').blur(); syncSearch(); renderList(); return; }
   });
+  $('toast').addEventListener('click', function () { this.classList.remove('show'); });
+
+  // swipe between My camera and Library
+  var sx = 0, sy = 0, swiping = false, lock = null;
+  function inScroller(el) { return el.closest && (el.closest('.chips') || el.closest('input')); }
+  document.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1 || document.body.classList.contains('pushed') || $('scrim').classList.contains('on') || inScroller(e.target)) { swiping = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; swiping = true; lock = null;
+  }, { passive: true });
+  document.addEventListener('touchmove', function (e) {
+    if (!swiping) return;
+    var dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+    if (lock === null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) lock = Math.abs(dx) > 1.2 * Math.abs(dy) ? 'x' : 'y';
+    if (lock === 'x') e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', function (e) {
+    if (!swiping || lock !== 'x') { swiping = false; return; }
+    swiping = false;
+    var dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) < 60) return;
+    var onHome = $('v-home').classList.contains('on');
+    if (dx < 0 && onHome) { ui.slide = 'inR'; location.hash = '#/library'; }
+    else if (dx > 0 && !onHome) { ui.slide = 'inL'; location.hash = '#/'; }
+  });
+
   $('importFile').addEventListener('change', function () { if (this.files[0]) importData(this.files[0]); this.value = ''; });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('scrim').classList.contains('on')) closeSheet(); });
 
