@@ -190,7 +190,7 @@ body.pushed .tabs{display:none}
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
     </button>
   </div>
-  <p class="intro">Here’s what’s on your camera. When you add a new recipe, save it here too, so you’ll always know what’s in each slot.</p>
+  <p class="intro">Here’s what’s on your camera. Save your camera recipes here so you can see what’s in each slot.</p>
   <div class="slots" id="slots"></div>
 </section>
 
@@ -312,7 +312,7 @@ body.pushed .tabs{display:none}
 
   // ---------- library ----------
   function renderChips() {
-    var list = [['all', 'All'], ['fav', 'Favorites'], ['incam', 'In camera']].concat(SIT);
+    var list = [['all', 'All'], ['fav', 'Favorites']].concat(SIT);
     $('chips').innerHTML = list.map(function (c) {
       return '<button class="chip" data-filter="' + c[0] + '" aria-pressed="' + (ui.filter === c[0]) + '">' + esc(c[1]) + '</button>';
     }).join('');
@@ -321,8 +321,7 @@ body.pushed .tabs{display:none}
     var q = ui.q.trim().toLowerCase();
     var out = R.filter(function (r) {
       if (ui.filter === 'fav' && !state.favs[r.id]) return false;
-      if (ui.filter === 'incam' && !slotOf(r.id)) return false;
-      if (ui.filter !== 'all' && ui.filter !== 'fav' && ui.filter !== 'incam' && r.situations.indexOf(ui.filter) < 0) return false;
+      if (ui.filter !== 'all' && ui.filter !== 'fav' && r.situations.indexOf(ui.filter) < 0) return false;
       if (q && (r.name + ' ' + sim(r) + ' ' + r.look + ' ' + (r.collection || '')).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
