@@ -454,7 +454,7 @@ h1[tabindex="-1"]:focus{outline:none}
     var h = '<button class="backbtn" data-back>' + ICON_BACK + 'Cancel</button>' +
       (cur && cur.id !== r.id ? '<div class="banner" role="note">' + ICON_WARN + '<span>This replaces ' + esc(cur.name) + ' in C' + n + '.</span></div>' : '') +
       '<div class="setuphead"><p class="overline">Add to camera · C' + n + ' · ' + esc(label) + '</p><h1 id="h-setup" tabindex="-1">' + esc(r.name) + '</h1>' +
-      (cur && cur.id !== r.id ? '' : '<p>' + (cur ? 'Already in this slot. Re-check every setting.' : 'Empty slot, so every setting is listed.') + '</p>') + '</div>' +
+      (cur && cur.id === r.id ? '<p>Already in this slot. Re-check every setting.</p>' : '') + '</div>' +
       '<div class="tip">On your camera: <span class="mono">MENU › IMAGE QUALITY SETTING › EDIT/SAVE CUSTOM SETTING › C' + n + '</span></div>';
     if (cur && cur.id !== r.id) {
       h += '<div class="seg" role="group" aria-label="Which settings to show"><button data-diff="1" aria-pressed="' + diff + '">Only changes (' + changed + ')</button>' +
@@ -563,7 +563,17 @@ h1[tabindex="-1"]:focus{outline:none}
     if (!t) { if (e.target === $('scrim')) closeSheet(); return; }
     var d = t.dataset;
     if (t.tagName === 'A' && /^#\/recipe\//.test(t.getAttribute('href') || '')) ui.retFocus = 'a[href="' + t.getAttribute('href') + '"]';
-    if (d.go) { ui.toast = ''; location.hash = d.go; return; }
+    if (d.go) {
+      ui.toast = '';
+      if ((location.hash || '#/') === d.go) {
+        // tapping the tab you're already on scrolls back to the top (like iOS)
+        var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+        if (d.go === '#/library') scrollMemo.lib = 0;
+        return;
+      }
+      location.hash = d.go; return;
+    }
     if (d.empty) { ui.filter = d.empty; ui.q = ''; $('q').value = ''; syncSearch(); location.hash = '#/library'; return; }
     if (d.filter) { ui.filter = d.filter; renderLibrary(); return; }
     if (d.fav) {
