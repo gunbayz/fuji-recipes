@@ -1,4 +1,4 @@
-var CACHE = 'my-fuji-v12';
+var CACHE = 'my-fuji-v13';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './data/recipes.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.ico', './favicon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }));
