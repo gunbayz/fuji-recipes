@@ -67,8 +67,8 @@ h1.big{font:600 36px/1.1 var(--serif)}
 .slot.empty .name{color:var(--faint)}
 .slot .sim{font:400 12px/1.3 var(--mono);color:var(--muted)}
 .chev{flex-shrink:0;color:var(--icon)}
-.toast{position:fixed;z-index:30;left:12px;right:12px;top:calc(var(--top) + 10px);max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center;padding:14px 16px;border-radius:16px;background:#16251D;color:var(--mint);font-size:15px;line-height:1.4;box-shadow:0 12px 32px rgba(0,0,0,.5);transform:translateY(-140%);opacity:0;transition:transform var(--t2) var(--spring),opacity var(--t2) var(--spring);pointer-events:none}
-.toast.show{transform:none;opacity:1;pointer-events:auto}
+.toast{position:fixed;z-index:30;left:12px;right:12px;top:calc(var(--top) + 10px);max-width:520px;margin:0 auto;display:flex;gap:10px;align-items:center;padding:14px 16px;border-radius:16px;background:#16251D;color:var(--mint);font-size:15px;line-height:1.4;box-shadow:0 12px 32px rgba(0,0,0,.5);opacity:0;transition:opacity var(--t2) var(--ease);pointer-events:none}
+.toast.show{opacity:1;pointer-events:auto}
 .toast.warn{background:#2A2410;color:var(--marigold)}
 .banner{display:flex;gap:10px;align-items:center;margin:8px 0 18px;padding:14px 16px;border-radius:16px;background:#2A2410;color:var(--marigold);font-size:15px;line-height:1.4}
 .banner svg{flex-shrink:0}
@@ -196,21 +196,21 @@ body.pushed .tabs{display:none}
 @keyframes down{to{transform:translateY(24px);opacity:0}}
 /* Motion model: sideways only between the My camera and Library tabs. Everything else is vertical:
    going deeper rises 16px into place; going back, the screen drops 16px and fades, then the previous one fades in.
-   Fixed bars stay pinned (never transformed), like iOS toolbars. */
-.view.rise>:not(.floatbar):not(.bottombar){animation:rise var(--t2) var(--spring)}
-.view.tabR>:not(.floatbar):not(.bottombar){animation:tabR var(--t2) var(--spring)}
-.view.tabL>:not(.floatbar):not(.bottombar){animation:tabL var(--t2) var(--spring)}
-.view.xfade>:not(.floatbar):not(.bottombar){animation:xfade var(--t1) var(--ease)}
+   Every part of a screen (including its top and bottom bars) moves together as one unit. */
+.view.rise>*{animation:rise var(--t2) var(--spring)}
+.view.tabR>*{animation:tabR var(--t2) var(--spring)}
+.view.tabL>*{animation:tabL var(--t2) var(--spring)}
+.view.xfade>*{animation:xfade var(--t1) var(--ease)}
 .view.settle>*{transition:transform var(--t2) var(--spring),opacity var(--t2) var(--spring)}
 .view.leave>*{transition:transform var(--t3) var(--exit),opacity var(--t3) var(--exit)}
 h1[tabindex="-1"]:focus{outline:none}
 /* Reduce Motion: no movement, only short fades */
 @media (prefers-reduced-motion:reduce){
-  .view.rise>:not(.floatbar):not(.bottombar),.view.tabR>:not(.floatbar):not(.bottombar),.view.tabL>:not(.floatbar):not(.bottombar),.view.xfade>:not(.floatbar):not(.bottombar){animation:xfade var(--t1) linear!important}
+  .view.rise>*,.view.tabR>*,.view.tabL>*,.view.xfade>*{animation:xfade var(--t1) linear!important}
   .sheet,.scrim.closing .sheet{animation:none}
   .scrim.on{animation:fade var(--t1) linear}
   .scrim.closing{animation:fadeOut var(--t1) linear forwards}
-  .toast{transform:none;transition:opacity var(--t1) linear}
+  .toast{transition:opacity var(--t1) linear}
   .bar div{transition:none}
 }
 </style>
@@ -336,7 +336,7 @@ h1[tabindex="-1"]:focus{outline:none}
       }
     });
     $('slots').innerHTML = h;
-    if (ui.toast) { var msg = ui.toast; ui.toast = ''; setTimeout(function () { showToast(msg); }, reduceMotion() ? 0 : 280); }
+    if (ui.toast) { var msg = ui.toast; ui.toast = ''; setTimeout(function () { showToast(msg); }, reduceMotion() ? 0 : 150); }
   }
   var toastTimer = null;
   var ICON_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5"/><path d="M12 17.3v.2"/></svg>';
@@ -527,11 +527,12 @@ h1[tabindex="-1"]:focus{outline:none}
     var from = currentView, same = from === id;
     var kind = '';
     if (from && !same) {
-      if (ui.dragged || LEVEL[id] < LEVEL[from]) kind = 'xfade';       // back: previous screen fades in
+      if (ui.noAnim) kind = '';                                          // revealed from under the sheet
+      else if (ui.dragged || LEVEL[id] < LEVEL[from]) kind = 'xfade';  // back: previous screen fades in
       else if (LEVEL[id] > LEVEL[from]) kind = 'rise';                  // deeper: rises into place
       else kind = (TAB[id] || 0) > (TAB[from] || 0) ? 'tabR' : 'tabL';  // tabs: the only sideways move
     }
-    ui.dragged = false;
+    ui.dragged = false; ui.noAnim = false;
     ['v-home', 'v-library', 'v-recipe', 'v-setup'].forEach(function (v) { $(v).classList.toggle('on', v === id); clearMotion($(v)); });
     ui.trans = kind;
     ui.navFrom = from; ui.navSame = same;
@@ -578,6 +579,8 @@ h1[tabindex="-1"]:focus{outline:none}
     if (LEVEL[v] === 0) ui.retFocus = null;
   }
   window.addEventListener('hashchange', function () {
+    if (ui.skipHash && location.hash === ui.skipHash) { ui.skipHash = null; return; } // already rendered
+    ui.skipHash = null;
     if ($('v-library').classList.contains('on')) scrollMemo.lib = window.scrollY;
     route();
   });
@@ -617,12 +620,12 @@ h1[tabindex="-1"]:focus{outline:none}
     if (d.sit) { ui.filter = d.sit; ui.q = ''; $('q').value = ''; syncSearch(); leaveThen(function () { location.hash = '#/library'; }); return; }
     if (d.back !== undefined) { goBack(); return; }
     if (d.pick) { pickSlot(d.pick); return; }
-    if (d.slot) { var slotHash = '#/setup/' + d.slot + '/' + encodeURIComponent(d.rid); closeSheet(function () { ui.setup = null; location.hash = slotHash; }); return; }
+    if (d.slot) { ui.setup = null; ui.noAnim = true; ui.skipHash = '#/setup/' + d.slot + '/' + encodeURIComponent(d.rid); location.hash = ui.skipHash; route(); closeSheet(function () {}); return; }
     if (d.remove) {
       var r2 = BY[state.slots[d.remove]];
       delete state.slots[d.remove]; save();
       ui.toast = 'C' + d.remove + ' is now empty' + (r2 ? ' (removed ' + r2.name + ')' : '') + '.';
-      leaveThen(function () { location.hash = '#/'; }); return;
+      location.hash = '#/'; return;
     }
     if (d.close !== undefined) { closeSheet(); return; }
     if (d.diff) { ui.setup.diff = d.diff === '1'; renderSetup(ui.setup.n, ui.setup.id); return; }
@@ -642,7 +645,7 @@ h1[tabindex="-1"]:focus{outline:none}
       for (var n = 1; n <= 7; n++) if (state.slots[n] === s.id && n !== s.n) delete state.slots[n];
       state.slots[s.n] = s.id; save();
       ui.toast = 'C' + s.n + ' · ' + SIT[s.n - 1][1] + ' now holds ' + BY[s.id].name + '.';
-      leaveThen(function () { ui.setup = null; location.hash = '#/'; }); return;
+      ui.setup = null; location.hash = '#/'; return;
     }
     if (t.id === 'menuBtn') { openMenu(); return; }
     if (d.export !== undefined) { exportData(); return; }
@@ -658,8 +661,7 @@ h1[tabindex="-1"]:focus{outline:none}
     v.classList.add('leave');
     void v.offsetWidth;
     Array.prototype.forEach.call(v.children, function (c) {
-      var bar = c.classList.contains('floatbar') || c.classList.contains('bottombar');
-      if (!bar && !reduceMotion()) c.style.transform = 'translateY(16px)';
+      if (!reduceMotion()) c.style.transform = 'translateY(16px)';
       c.style.opacity = '0';
     });
     setTimeout(function () { ui.leaving = false; ui.dragged = true; fn(); }, reduceMotion() ? 120 : 180);
