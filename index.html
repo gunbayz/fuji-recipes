@@ -333,7 +333,7 @@ h1[tabindex="-1"]:focus{outline:none}
       '<img src="' + esc(sized(p.url, 1200)) + '" alt="' + esc(p.caption ? 'Sample photo: ' + p.caption : 'Sample photo for ' + name) + '"' + (i ? ' loading="lazy"' : '') + ' decoding="async" referrerpolicy="no-referrer"></div>';
   }
   function capText(r, p) {
-    return (p && p.caption ? p.caption + ' · ' : (r.collection ? 'Shared sample photo for the ' + r.collection + ' · ' : 'Sample photo · ')) + 'Photo: Fuji X Weekly';
+    return (p && p.caption ? p.caption + ' · ' : 'Sample photo for ' + r.name + ' · ') + 'Photo: Fuji X Weekly';
   }
   function gallery(r) {
     var ps = photosOf(r), n = ps.length;
